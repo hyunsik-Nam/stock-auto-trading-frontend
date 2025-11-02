@@ -4,10 +4,14 @@ import StockStatus from '@/components/panels/StockStatus';
 
 const MainPage = () => {
   return (
-    <>
-      <StockSearch />
-      <StockStatus />
-    </>
+    <div className="flex flex-col h-full gap-1">
+      <div className="flex-1 border border-gray-200 rounded-lg">
+        <StockSearch />
+      </div>
+      <div className="flex-1 border border-gray-200 rounded-lg">
+        <StockStatus />
+      </div>
+    </div>
   );
 };
 
