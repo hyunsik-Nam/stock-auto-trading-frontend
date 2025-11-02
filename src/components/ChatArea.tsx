@@ -1,17 +1,24 @@
 'use client';
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { apiClient } from '../config/api';
+import { config } from '../config/config';
 import ChatLoading from './loading';
 
+interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+}
+
+interface ChatResponse {
+  reply: string;
+  status: string;
+}
+
 const ChatArea = () => {
-  const [messages, setMessages] = useState<
-    Array<{
-      id: string;
-      content: string;
-      sender: 'user' | 'bot';
-      timestamp: Date;
-    }>
-  >([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +30,7 @@ const ChatArea = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputMessage.trim()) {
       const newMessage = {
@@ -36,17 +43,30 @@ const ChatArea = () => {
       setMessages(prev => [...prev, newMessage]);
       setInputMessage('');
 
-      // 강제 에러 발생
       try {
-        throw new Error('강제로 발생시킨 테스트 에러입니다.');
+        // API 호출 예시
+        const response = await apiClient.post<ChatResponse>('/chat/message', {
+          message: newMessage.content,
+          timestamp: newMessage.timestamp,
+        });
+
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: response.data.reply || '메시지를 받았습니다.',
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+
+        setTimeout(() => {
+          setMessages(prev => [...prev, botMessage]);
+        }, 1000);
       } catch (error) {
         console.error('메시지 전송 중 에러 발생:', error);
 
-        // 에러 메시지를 채팅에 표시
-        const errorMessage = {
+        const errorMessage: Message = {
           id: (Date.now() + 0.5).toString(),
           content: '죄송합니다. 메시지 처리 중 오류가 발생했습니다.',
-          sender: 'bot' as const,
+          sender: 'bot',
           timestamp: new Date(),
         };
 
@@ -54,22 +74,12 @@ const ChatArea = () => {
           setMessages(prev => [...prev, errorMessage]);
         }, 500);
       }
-      // 봇 응답 시뮬레이션
-      setTimeout(() => {
-        const botMessage = {
-          id: (Date.now() + 1).toString(),
-          content: '메시지를 받았습니다.',
-          sender: 'bot' as const,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, botMessage]);
-      }, 1000);
     }
   };
 
   return (
     <div className="relative flex flex-col h-full w-full overflow-hidden">
-      <Suspense fallback={ChatLoading()}></Suspense>
+      <Suspense fallback={<ChatLoading />} />
       <div
         className={
           messages.length === 0
