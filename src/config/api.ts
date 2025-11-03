@@ -37,12 +37,13 @@ class ApiClient {
     }
   }
 
-  async post<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, headers: HeadersInit, body: unknown): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(getApiUrl(endpoint), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...headers,
         },
         body: JSON.stringify(body),
       });
