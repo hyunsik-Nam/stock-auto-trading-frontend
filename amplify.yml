@@ -8,6 +8,7 @@ frontend:
     build:
       commands:
         - echo "Building application..."
+        - env | grep -e NEXT_PUBLIC_ >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .next
